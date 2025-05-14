@@ -1,5 +1,6 @@
 package com.example.LAT2025.model;
 
+import com.example.LAT2025.service.CurrencyExchangeService;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Entity
 public class FundraisingEvent {
@@ -34,7 +36,6 @@ public class FundraisingEvent {
     @Enumerated(EnumType.STRING)
     private Currency accountCurrency;
 
-    // Default constructor for JPA
     public FundraisingEvent() {
         this.accountBalance = BigDecimal.ZERO;
     }
@@ -77,13 +78,34 @@ public class FundraisingEvent {
         this.accountCurrency = accountCurrency;
     }
 
-    public void addFunds(Money money) {
-        if (money.getCurrency() == this.accountCurrency) {
-            this.accountBalance = this.accountBalance.add(money.getAmount());
-        } else {
-            // Convert the money to the account currency
-            BigDecimal convertedAmount = money.getCurrency().convertTo(money.getAmount(), this.accountCurrency);
-            this.accountBalance = this.accountBalance.add(convertedAmount);
-        }
+    public void addFunds(Money money, CurrencyExchangeService exchangeService) {
+        Money accountMoney = new Money(this.accountBalance, this.accountCurrency);
+        
+        Money resultMoney = accountMoney.add(money, exchangeService);
+        
+        this.accountBalance = resultMoney.getAmount();
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FundraisingEvent event = (FundraisingEvent) o;
+        return Objects.equals(id, event.id) && Objects.equals(name, event.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
+    }
+
+    @Override
+    public String toString() {
+        return "FundraisingEvent{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", accountBalance=" + accountBalance +
+                ", accountCurrency=" + accountCurrency +
+                '}';
     }
 } 

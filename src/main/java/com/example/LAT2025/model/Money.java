@@ -1,5 +1,6 @@
 package com.example.LAT2025.model;
 
+import com.example.LAT2025.service.CurrencyExchangeService;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -11,6 +12,7 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Entity
 public class Money {
@@ -60,21 +62,40 @@ public class Money {
         this.currency = currency;
     }
 
-    public Money add(Money other) {
+    public Money add(Money other, CurrencyExchangeService exchangeService) {
         if (this.currency == other.currency) {
             return new Money(this.amount.add(other.amount), this.currency);
         } else {
-            BigDecimal convertedAmount = other.currency.convertTo(other.amount, this.currency);
-            return new Money(this.amount.add(convertedAmount), this.currency);
+            // Convert the other currency to this currency and then add
+            Money convertedMoney = other.convertTo(this.currency, exchangeService);
+            return new Money(this.amount.add(convertedMoney.amount), this.currency);
         }
     }
 
-    public Money convertTo(Currency targetCurrency) {
+    public Money convertTo(Currency targetCurrency, CurrencyExchangeService exchangeService) {
         if (this.currency == targetCurrency) {
             return new Money(this.amount, this.currency);
         }
         
-        BigDecimal convertedAmount = this.currency.convertTo(this.amount, targetCurrency);
+        BigDecimal convertedAmount = exchangeService.convert(this.amount, this.currency, targetCurrency);
         return new Money(convertedAmount, targetCurrency);
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Money money = (Money) o;
+        return Objects.equals(amount, money.amount) && currency == money.currency;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(amount, currency);
+    }
+
+    @Override
+    public String toString() {
+        return amount + " " + currency;
     }
 } 

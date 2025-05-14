@@ -5,6 +5,7 @@ import com.example.LAT2025.model.Currency;
 import com.example.LAT2025.model.FundraisingEvent;
 import com.example.LAT2025.model.Money;
 import com.example.LAT2025.repository.FundraisingEventRepository;
+import com.example.LAT2025.service.CurrencyExchangeService;
 import com.example.LAT2025.service.FundraisingEventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,14 @@ import java.util.List;
 public class FundraisingEventServiceImpl implements FundraisingEventService {
 
     private final FundraisingEventRepository fundraisingEventRepository;
+    private final CurrencyExchangeService currencyExchangeService;
 
     @Autowired
-    public FundraisingEventServiceImpl(FundraisingEventRepository fundraisingEventRepository) {
+    public FundraisingEventServiceImpl(
+            FundraisingEventRepository fundraisingEventRepository, 
+            CurrencyExchangeService currencyExchangeService) {
         this.fundraisingEventRepository = fundraisingEventRepository;
+        this.currencyExchangeService = currencyExchangeService;
     }
 
     @Override
@@ -50,7 +55,7 @@ public class FundraisingEventServiceImpl implements FundraisingEventService {
     @Transactional
     public FundraisingEvent addFundsToEvent(Long eventId, Money money) {
         FundraisingEvent event = getFundraisingEventById(eventId);
-        event.addFunds(money);
+        event.addFunds(money, currencyExchangeService);
         return fundraisingEventRepository.save(event);
     }
 } 
